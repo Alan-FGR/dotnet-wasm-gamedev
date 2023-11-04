@@ -45,7 +45,7 @@
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
 
     <script type="module">
-        import { dotnet } from "./_framework/dotnet.js";
+        import { dotnet } from "./framework/dotnet.js";
 
         // We intercept console logs to display debugging stuff in the HTML
         let debug_output_pre = document.getElementById("debug_output");
