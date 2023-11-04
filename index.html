@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ALAN'S ENGINE WASM TEST</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        canvas.emscripten {
+            /* HTML5 CANVAS is such a hacky mess :( */
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="
+        right: 0;
+        position: fixed;
+        max-height: 50%;
+        max-width: 60%;
+        overflow-y: scroll;
+        z-index: 9999;
+        ">
+        <pre id="debug_output" style="
+                margin: 0;
+                padding-left: 0.2em;
+                background: black;
+                color: white;
+                white-space: pre-wrap;
+            "></pre>
+    </div>
+
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+
+    <script type="module">
+        import { dotnet } from "./_framework/dotnet.js";
+
+        // We intercept console logs to display debugging stuff in the HTML
+        let debug_output_pre = document.getElementById("debug_output");
+
+        console.original_log = console.log.bind(console);
+        console.log = function (msg) {
+            debug_output_pre.innerText += msg + "\n";
+            debug_output_pre.parentElement.scrollTop = debug_output_pre.parentElement.scrollHeight;
+            console.original_log.apply(console, arguments);
+        }
+
+        console.original_info = console.info.bind(console);
+        console.info = function (msg) {
+            debug_output_pre.innerText += msg + "\n";
+            debug_output_pre.parentElement.scrollTop = debug_output_pre.parentElement.scrollHeight;
+            console.original_info.apply(console, arguments);
+        }
+
+        console.original_warn = console.warn.bind(console);
+        console.warn = function (msg) {
+            debug_output_pre.innerText += msg + "\n";
+            debug_output_pre.parentElement.scrollTop = debug_output_pre.parentElement.scrollHeight;
+            console.original_warn.apply(console, arguments);
+        }
+
+        console.original_error = console.error.bind(console);
+        console.error = function (msg) {
+            debug_output_pre.innerText += msg + "\n";
+            debug_output_pre.parentElement.scrollTop = debug_output_pre.parentElement.scrollHeight;
+            console.original_error.apply(console, arguments);
+        }
+
+        console.log("Downloading and initializing WASM Application and required .NET8 runtime. Please wait...")
+
+        await dotnet.withModuleConfig({
+            onDownloadResourceProgress: (loaded, total) => {
+                console.log("Resource download progress: " + loaded + " of " + total);
+                if (loaded === total && loaded !== 0) {
+                    console.log("Resource download progress: Finished!");
+                }
+            }
+        }).create();
+
+        console.log("Finished initializing required .NET8 runtime! Running Application...")
+
+        debug_output_pre.style.background = "rgba(0,0,0,0.8)";
+        debug_output_pre.style.color = "rgba(255,255,255,0.8)";
+        debug_output_pre.parentElement.style.maxWidth = "30%";
+        debug_output_pre.parentElement.style.maxHeight = "20%";
+        
+        dotnet.instance.Module['canvas'] = (function () {
+            return document.getElementById('canvas');
+        })();
+
+        await dotnet.run();
+    </script>
+
+</body>
+
+</html>
