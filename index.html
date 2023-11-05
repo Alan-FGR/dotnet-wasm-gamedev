@@ -80,14 +80,19 @@
 
         console.log("Downloading and initializing WASM Application and required .NET8 runtime. Please wait...")
 
-        await dotnet.withModuleConfig({
+        await dotnet
+        .withModuleConfig({
             onDownloadResourceProgress: (loaded, total) => {
                 console.log("Resource download progress: " + loaded + " of " + total);
                 if (loaded === total && loaded !== 0) {
                     console.log("Resource download progress: Finished!");
                 }
             }
-        }).create();
+        })
+        .withConfig({
+            disableIntegrityCheck: true
+        })
+        .create();
 
         console.log("Finished initializing required .NET8 runtime! Running Application...")
 
